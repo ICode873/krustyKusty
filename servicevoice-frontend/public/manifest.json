@@ -1,0 +1,20 @@
+{
+  "short_name": "ServiceVoice",
+  "name": "ServiceVoice PWA",
+  "icons": [
+    {
+      "src": "/icons/hammer-gray-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/hammer-gray-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#2F6B4F",
+  "theme_color": "#2F6B4F",
+  "display": "standalone"
+}
