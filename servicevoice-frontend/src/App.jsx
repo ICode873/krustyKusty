@@ -12,10 +12,14 @@ import SignUp from './pages/SignUp'
 import LogIn from './pages/LogIn'
 import AppAccess from './pages/AppAccess'
 import CustomerDashboard from './pages/CustomerDashboard'
+import OwnerDashboard from './pages/OwnerDashboard'
 
-function ProtectedRoute({ children }) {
-  const { user } = useAuth()
-  return user ? children : <Navigate to="/login" />
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user, role } = useAuth()
+  if (!user) return <Navigate to="/login" />
+  if (allowedRoles && !allowedRoles.includes(role))
+    return <Navigate to="/dashboard" />
+  return children
 }
 
 function DebugAuth() {
@@ -48,8 +52,16 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['customer', 'tech']}>
                 <CustomerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['owner']}>
+                <OwnerDashboard />
               </ProtectedRoute>
             }
           />

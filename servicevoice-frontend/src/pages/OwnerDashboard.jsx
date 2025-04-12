@@ -1,12 +1,14 @@
-// src/pages/CustomerDashboard.jsx
+// src/pages/OwnerDashboard.jsx
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../utils/supabase'
+import { Navigate } from 'react-router-dom'
 import '../styles/styles.css'
 
-export default function CustomerDashboard() {
+export default function OwnerDashboard() {
   const { user, role } = useAuth()
   const [ratings, setRatings] = useState([])
+  const [techs, setTechs] = useState([])
   const [loading, setLoading] = useState(true)
   const [isHighContrast, setIsHighContrast] = useState(false)
 
@@ -23,17 +25,17 @@ export default function CustomerDashboard() {
   }
 
   useEffect(() => {
-    if (user) {
+    if (user && role === 'owner') {
       fetchRatings()
+      fetchTechs()
     }
-  }, [user])
+  }, [user, role])
 
   const fetchRatings = async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('ratings')
-      .select('rating, comment, created_at')
-      .eq('user_id', user.id)
+      .select('rating, comment, created_at, user_id')
       .order('created_at', { ascending: false })
     if (error) {
       console.error('Error fetching ratings:', error)
@@ -44,11 +46,25 @@ export default function CustomerDashboard() {
     setLoading(false)
   }
 
+  const fetchTechs = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('role', 'tech')
+    if (error) {
+      console.error('Error fetching techs:', error)
+      setTechs([])
+    } else {
+      setTechs(data)
+    }
+  }
+
   const toggleHighContrast = () => {
     setIsHighContrast(!isHighContrast)
   }
 
   if (!user) return <div>Loading...</div>
+  if (role !== 'owner') return <Navigate to="/dashboard" />
 
   return (
     <div className={isHighContrast ? 'high-contrast' : ''}>
@@ -58,8 +74,8 @@ export default function CustomerDashboard() {
       <main>
         <h2>
           <img
-            src={roleIcons[role] || roleIcons.customer}
-            alt={roleAltText[role] || roleAltText.customer}
+            src={roleIcons.owner}
+            alt={roleAltText.owner}
             style={{
               width: '24px',
               height: '24px',
@@ -67,16 +83,10 @@ export default function CustomerDashboard() {
               verticalAlign: 'middle',
             }}
           />
-          Your{' '}
-          {role === 'customer'
-            ? 'Hammer'
-            : role === 'owner'
-            ? 'Wrench'
-            : 'Screwdriver'}{' '}
-          Dashboard
+          Your Wrench Dashboard
         </h2>
         <section>
-          <h3>Your Ratings</h3>
+          <h3>Business Ratings</h3>
           {loading ? (
             <p>Loading ratings...</p>
           ) : ratings.length === 0 ? (
@@ -105,16 +115,38 @@ export default function CustomerDashboard() {
                     <strong>Date:</strong>{' '}
                     {new Date(rating.created_at).toLocaleDateString()}
                   </p>
+                  <p>
+                    <strong>User ID:</strong> {rating.user_id}
+                  </p>
                 </li>
               ))}
             </ul>
           )}
         </section>
-        {role === 'customer' && (
-          <p>
-            Own a business? <a href="/verify">Verify Now</a>
-          </p>
-        )}
+        <section>
+          <h3>Your Techs</h3>
+          {techs.length === 0 ? (
+            <p>No techs assigned.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {techs.map((tech) => (
+                <li
+                  key={tech.id}
+                  style={{
+                    backgroundColor: '#F5F5F5',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <p>
+                    <strong>Email:</strong> {tech.email}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
       <footer>
         <p>© 2025 ServiceVoice</p>
