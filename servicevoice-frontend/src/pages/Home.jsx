@@ -1,5 +1,7 @@
 // src/pages/Home.jsx
 import { useState } from 'react'
+import Header from '../components/Header'
+import '../styles/styles.css'
 
 export default function Home() {
   const [isHighContrast, setIsHighContrast] = useState(false)
@@ -10,13 +12,7 @@ export default function Home() {
 
   return (
     <div className={isHighContrast ? 'high-contrast' : ''}>
-      <header>
-        <h1>ServiceVoice</h1>
-        <nav>
-          <a href="/">Home</a> | <a href="/about">About</a> |{' '}
-          <a href="/signup">Sign Up</a> | <a href="/login">Log In</a>
-        </nav>
-      </header>
+      <Header />
       <main>
         <section>
           <h2>Rate Customers, Share Insights, Grow Smarter</h2>
@@ -39,7 +35,7 @@ export default function Home() {
         </section>
       </main>
       <footer>
-        <p>&copy; 2025 ServiceVoice</p>
+        <p>© 2025 ServiceVoice</p>
         <button className="high-contrast-toggle" onClick={toggleHighContrast}>
           {isHighContrast ? 'Normal Contrast' : 'High Contrast'}
         </button>

@@ -11,7 +11,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error)
+        setLoading(false)
+        return
+      }
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchUserRole(session.user.id)
@@ -38,18 +43,28 @@ export function AuthProvider({ children }) {
   }, [])
 
   const fetchUserRole = async (userId) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-    if (error) {
-      console.error('Error fetching role:', error)
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle()
+      if (error) {
+        console.error('Fetch role error:', error)
+        throw error
+      }
+      if (!data) {
+        // User not found, rely on trigger to create
+        setRole('customer')
+      } else {
+        setRole(data.role || 'customer')
+      }
+    } catch (err) {
+      console.error('Role fetch failed:', err)
       setRole('customer')
-    } else {
-      setRole(data.role || 'customer')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

@@ -1,6 +1,6 @@
-// src/pages/LogIn.jsx
 import { useState } from 'react'
 import { supabase } from '../utils/supabase'
+import Header from '../components/Header'
 import '../styles/styles.css'
 
 export default function LogIn() {
@@ -8,6 +8,7 @@ export default function LogIn() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [isHighContrast, setIsHighContrast] = useState(false)
 
   const handleLogIn = async (e) => {
     e.preventDefault()
@@ -19,7 +20,7 @@ export default function LogIn() {
         password,
       })
       if (error) throw error
-      window.location.href = '/app-access' // Redirect after login
+      window.location.href = '/app-access'
     } catch (err) {
       setError(err.message)
     } finally {
@@ -27,11 +28,13 @@ export default function LogIn() {
     }
   }
 
+  const toggleHighContrast = () => {
+    setIsHighContrast(!isHighContrast)
+  }
+
   return (
-    <div>
-      <header>
-        <h1>ServiceVoice</h1>
-      </header>
+    <div className={isHighContrast ? 'high-contrast' : ''}>
+      <Header />
       <main>
         <h2>Log In</h2>
         <form onSubmit={handleLogIn}>
@@ -62,6 +65,9 @@ export default function LogIn() {
       </main>
       <footer>
         <p>© 2025 ServiceVoice</p>
+        <button className="high-contrast-toggle" onClick={toggleHighContrast}>
+          {isHighContrast ? 'Normal Contrast' : 'High Contrast'}
+        </button>
       </footer>
     </div>
   )

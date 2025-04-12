@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../utils/supabase'
+import '../styles/styles.css'
 
 export default function CustomerDashboard() {
   const { user, role } = useAuth()
   const [ratings, setRatings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isHighContrast, setIsHighContrast] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -30,10 +32,14 @@ export default function CustomerDashboard() {
     setLoading(false)
   }
 
+  const toggleHighContrast = () => {
+    setIsHighContrast(!isHighContrast)
+  }
+
   if (!user) return <div>Loading...</div>
 
   return (
-    <div>
+    <div className={isHighContrast ? 'high-contrast' : ''}>
       <header>
         <h1>ServiceVoice</h1>
       </header>
@@ -89,7 +95,10 @@ export default function CustomerDashboard() {
         )}
       </main>
       <footer>
-        <p>&copy; 2025 ServiceVoice</p>
+        <p>© 2025 ServiceVoice</p>
+        <button className="high-contrast-toggle" onClick={toggleHighContrast}>
+          {isHighContrast ? 'Normal Contrast' : 'High Contrast'}
+        </button>
       </footer>
     </div>
   )
