@@ -45,6 +45,16 @@ export default function CustomerDashboard() {
       </header>
       <main>
         <h2>
+          <img
+            src="/icons/hammer-gray-192x192.png"
+            alt="Gray Hammer Icon representing customer role"
+            style={{
+              width: '24px',
+              height: '24px',
+              marginRight: '0.5rem',
+              verticalAlign: 'middle',
+            }}
+          />
           Your{' '}
           {role === 'customer'
             ? 'Hammer'
