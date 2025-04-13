@@ -7,15 +7,35 @@ import '../styles/styles.css'
 export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [isHighContrast, setIsHighContrast] = useState(false)
 
+  const validateInputs = () => {
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return 'Please enter a valid email address.'
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long.'
+    }
+    if (password !== confirmPassword) {
+      return 'Passwords do not match.'
+    }
+    return null
+  }
+
   const handleSignUp = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
+    const validationError = validateInputs()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+    setLoading(true)
     try {
+      console.log('Attempting signup with:', { email })
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -23,12 +43,18 @@ export default function SignUp() {
           data: { role: 'customer' },
         },
       })
-      if (error) throw error
-      if (data.user) {
-        alert('Check your email for a confirmation link!')
+      if (error) {
+        console.error('Supabase signup error:', error)
+        throw error
       }
+      console.log('Signup successful, user:', data.user)
+      alert('Check your email for a confirmation link!')
+      setEmail('')
+      setPassword('')
+      setConfirmPassword('')
     } catch (err) {
-      setError(err.message)
+      console.error('Signup error details:', err)
+      setError(err.message || 'Failed to sign up. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -51,14 +77,25 @@ export default function SignUp() {
             onChange={(e) => setEmail(e.target.value)}
             aria-label="Email"
             disabled={loading}
+            required
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             aria-label="Password"
             disabled={loading}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            aria-label="Confirm Password"
+            disabled={loading}
+            required
           />
           <button type="submit" disabled={loading}>
             {loading ? 'Signing Up...' : 'Sign Up'}
@@ -67,16 +104,18 @@ export default function SignUp() {
             Already have an account? <a href="/login">Log In</a>
           </p>
         </form>
-        {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
+        {error && <p className="error">{error}</p>}
         <div
-          style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}
+          style={{ display: 'flex', alignItems: 'center', marginTop: '1.5rem' }}
         >
           <img
             src="/icons/hammer-gray-192x192.png"
             alt="Gray Hammer Icon representing customer role"
-            style={{ width: '24px', height: '24px', marginRight: '0.5rem' }}
+            style={{ width: '32px', height: '32px', marginRight: '0.75rem' }}
           />
-          <p>All users start as customers (Gray Hammer).</p>
+          <p style={{ fontWeight: 'bold' }}>
+            All users start as customers (Gray Hammer).
+          </p>
         </div>
       </main>
       <footer>

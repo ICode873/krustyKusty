@@ -10,31 +10,52 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error)
-        setLoading(false)
-        return
-      }
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchUserRole(session.user.id)
-      } else {
+    const initializeSession = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Get session error:', error)
+          throw error
+        }
+        console.log('Initial session:', session)
+        if (session?.user) {
+          setUser(session.user)
+          await fetchUserRole(session.user.id)
+        } else {
+          setUser(null)
+          setRole('customer')
+        }
+      } catch (err) {
+        console.error('Session init error:', err)
+        setUser(null)
         setRole('customer')
+      } finally {
         setLoading(false)
       }
-    })
+    }
 
-    // Listen for auth changes
+    initializeSession()
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchUserRole(session.user.id)
-      } else {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event, 'Session:', session)
+      try {
+        if (session?.user) {
+          setUser(session.user)
+          await fetchUserRole(session.user.id)
+        } else {
+          setUser(null)
+          setRole('customer')
+        }
+      } catch (err) {
+        console.error('Auth state change error:', err)
+        setUser(null)
         setRole('customer')
+      } finally {
         setLoading(false)
       }
     })
@@ -53,17 +74,11 @@ export function AuthProvider({ children }) {
         console.error('Fetch role error:', error)
         throw error
       }
-      if (!data) {
-        // User not found, rely on trigger to create
-        setRole('customer')
-      } else {
-        setRole(data.role || 'customer')
-      }
+      console.log('Fetched role:', data)
+      setRole(data?.role || 'customer')
     } catch (err) {
       console.error('Role fetch failed:', err)
       setRole('customer')
-    } finally {
-      setLoading(false)
     }
   }
 

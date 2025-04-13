@@ -2,12 +2,12 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../utils/supabase'
+import { Navigate } from 'react-router-dom'
 import '../styles/styles.css'
 
 export default function CustomerDashboard() {
-  const { user, role } = useAuth()
+  const { user, role, loading } = useAuth()
   const [ratings, setRatings] = useState([])
-  const [loading, setLoading] = useState(true)
   const [isHighContrast, setIsHighContrast] = useState(false)
 
   const roleIcons = {
@@ -23,32 +23,41 @@ export default function CustomerDashboard() {
   }
 
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       fetchRatings()
     }
-  }, [user])
+  }, [user, loading])
 
   const fetchRatings = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('ratings')
-      .select('rating, comment, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.error('Error fetching ratings:', error)
+    try {
+      const { data, error } = await supabase
+        .from('ratings')
+        .select('rating, comment, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      console.log('Ratings fetched:', data)
+      setRatings(data || [])
+    } catch (err) {
+      console.error('Error fetching ratings:', err)
       setRatings([])
-    } else {
-      setRatings(data)
     }
-    setLoading(false)
   }
 
   const toggleHighContrast = () => {
     setIsHighContrast(!isHighContrast)
   }
 
-  if (!user) return <div>Loading...</div>
+  console.log('Dashboard render:', { user: !!user, role, loading })
+
+  if (loading) {
+    console.log('Dashboard loading')
+    return <div>Loading...</div>
+  }
+  if (!user) {
+    console.log('No user, redirecting to login')
+    return <Navigate to="/login" />
+  }
 
   return (
     <div className={isHighContrast ? 'high-contrast' : ''}>
@@ -61,11 +70,14 @@ export default function CustomerDashboard() {
             src={roleIcons[role] || roleIcons.customer}
             alt={roleAltText[role] || roleAltText.customer}
             style={{
-              width: '24px',
-              height: '24px',
-              marginRight: '0.5rem',
+              width: '32px',
+              height: '32px',
+              marginRight: '0.75rem',
               verticalAlign: 'middle',
             }}
+            onError={(e) =>
+              console.error(`Failed to load icon for role: ${role}`)
+            }
           />
           Your{' '}
           {role === 'customer'
@@ -77,9 +89,7 @@ export default function CustomerDashboard() {
         </h2>
         <section>
           <h3>Your Ratings</h3>
-          {loading ? (
-            <p>Loading ratings...</p>
-          ) : ratings.length === 0 ? (
+          {ratings.length === 0 ? (
             <p>No ratings yet.</p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0 }}>

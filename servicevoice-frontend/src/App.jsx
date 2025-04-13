@@ -15,10 +15,17 @@ import CustomerDashboard from './pages/CustomerDashboard'
 import OwnerDashboard from './pages/OwnerDashboard'
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { user, role } = useAuth()
-  if (!user) return <Navigate to="/login" />
-  if (allowedRoles && !allowedRoles.includes(role))
+  const { user, role, loading } = useAuth()
+  console.log('ProtectedRoute:', { user: !!user, role, loading, allowedRoles })
+  if (loading) return <div>Loading...</div>
+  if (!user) {
+    console.log('No user, redirecting to /login')
+    return <Navigate to="/login" />
+  }
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    console.log(`Role ${role} not allowed, redirecting to /dashboard`)
     return <Navigate to="/dashboard" />
+  }
   return children
 }
 
@@ -52,7 +59,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'tech']}>
+              <ProtectedRoute allowedRoles={['customer', 'tech', 'owner']}>
                 <CustomerDashboard />
               </ProtectedRoute>
             }
